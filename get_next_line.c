@@ -1,104 +1,132 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   get_next_line.c                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: imqandyl <imqandyl@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/07/22 09:24:35 by imqandyl          #+#    #+#             */
+/*   Updated: 2024/07/22 13:58:16 by imqandyl         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "get_next_line.h"
 
 char	*strdup_to_newline(char *str)
 {
-	int		i;
-	int		j;
+	size_t	i;
+	char	*n_str;
 
-	j = 0;
 	i = 0;
 	if (!str || ft_strlen(str) == 0)
 		return (NULL);
 	while (str[i] && str[i] != '\n')
 		i++;
-	char *res = (char *)malloc(sizeof(char) * (i + 2)); // include null terminator and \n
-	if (!res)
+	if (str[i] == '\n')
+		i++;
+	n_str = (char *)malloc(i + 1);
+	if (!n_str)
 		return (NULL);
-	while (j <= i) {
-        res[j] = str[j];
-        j++;
-    }
-	res[j] = '\0';
-    return res;
+	n_str[i] = '\0';
+	i = 0;
+	while (str[i] && str[i] != '\n')
+	{
+		n_str[i] = str[i];
+		i++;
+	}
+	if (str[i] == '\n')
+		n_str[i] = '\n';
+	return (n_str);
 }
-// Function to read file data into a buffer
-char	*read_chunks(char *str, int fd)
+
+char	*read_chunks(int fd, char *buf, char *str)
 {
-	char temp[BUFFER_SIZE + 1]; //automatically allocated on the stack
+	char	*new_str;
+	int		byte_read;
 
-	int byte_read = 1;
-
-    while (!ft_strchr(str, '\n') && byte_read != 0) {
-        byte_read = read(fd, temp, BUFFER_SIZE);
-        if (byte_read == -1) { // 0 if the end of the file is reached, or -1 if an error occurs.
-            free(str);
-            return NULL;
-        }
-        temp[byte_read] = '\0';
-        char *new_str = ft_strjoin(str, temp);//This ensures that all previously read data and the new data chunk are combined into a single string.
-		free(str);
-        str = new_str;
-		if (!str)
-            return NULL;
-    }
-    return str;
+	byte_read = 1;
+	while ((!ft_strchr(str, '\n')) && byte_read > 0)
+	{
+		byte_read = read(fd, buf, BUFFER_SIZE);
+		if (byte_read < 0)
+		{
+			free(buf);
+			free(str);
+			return (NULL);
+		}
+		if (byte_read == 0)
+		{
+			free(buf);
+			return (str);
+		}
+		buf[byte_read] = '\0';
+		new_str = str;
+		str = ft_strjoin(str, buf);
+		free(new_str);
+	}
+	free(buf);
+	return (str);
 }
-// Function to remove the first line from the buffer
-char	*remove_full_line(char *str)
+
+char	*remove_first_line(char *str)
 {
-	int		i;
-	int		k;
+	size_t	i;
+	char	*n_str;
 
 	i = 0;
 	while (str[i] && str[i] != '\n')
 		i++;
+	if (str[i] == '\n')
+		i++;
 	if (!str[i])
+	{
+		free(str);
 		return (NULL);
-	char *new = (char *)malloc(ft_strlen(str) - i);
-	if (!new)
-		return (NULL);
-	k = 0;
-	i++; // skip the newline character
-	while (str[i])
-		new[k++] = str[i++];
-	new[k] = '\0';
+	}
+	n_str = ft_strdup(str + i);
 	free(str);
-	return new;
+	if (!n_str)
+		return (NULL);
+	return (n_str);
 }
 
-char *get_next_line(int fd) {
-    static char *str;
-    char *res;
-
-    if (fd < 0 || BUFFER_SIZE <= 0 || BUFFER_SIZE >= INT_MAX) // failure to open the file
-        return NULL;
-    str = read_chunks(str, fd);
-    if (!str)
-        return NULL;
-    res = strdup_to_newline(str);
-    str = remove_full_line(str);
-    return res;
-}
-int main()
+char	*get_next_line(int fd)
 {
-    int fd;
-    char *line;
+	char		*buf;
+	static char	*str;
+	char		*n_str;
 
-    fd = open("file.txt", O_RDONLY);
-    if (fd == -1)
-    {
-        perror("Error opening file");
-        return 1;
-    }
-    while ((line = get_next_line(fd)) != NULL)
-    {
-        printf("%s", line);
-        free(line);
-    }
-    close(fd);
-    return 0;
+	if (fd < 0 || BUFFER_SIZE <= 0 || BUFFER_SIZE >= INT_MAX)
+		return (NULL);
+	buf = (char *)malloc((size_t)BUFFER_SIZE + 1);
+	if (!buf)
+		return (NULL);
+	str = read_chunks(fd, buf, str);
+	if (!str)
+	{
+		return (NULL);
+	}
+	n_str = strdup_to_newline(str);
+	str = remove_first_line(str);
+	return (n_str);
 }
-/*
-The read_file_buffer function reads chunks of data from the file until it encounters a newline character or reaches the end of the file.
-The strdup_to_newline function creates a new string containing the characters up to and including the first newline character.
-The remove_full_line function updates the static buffer to remove the line that was just read, preparing it for the next call to get_next_line.*/
+
+// int	main(void)
+// {
+// 	int		fd;
+// 	char	*line;
+
+// 	fd = open("file.txt", O_RDONLY);
+// 	if (fd == -1)
+// 	{
+// 		perror("Error opening file");
+// 		return (1);
+// 	}
+// 	while ((line = get_next_line(fd)) != NULL)
+// 	{
+// 		printf("%s", line);
+// 		free(line);
+// 	}
+// 	close(fd);
+// 	return (0);
+// }

@@ -1,23 +1,34 @@
-#ifndef GET_NEXT_LINE_H//if not defined
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   get_next_line.h                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: imqandyl <imqandyl@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/07/19 10:05:59 by imqandyl          #+#    #+#             */
+/*   Updated: 2024/07/22 09:39:25 by imqandyl         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#ifndef GET_NEXT_LINE_H
 # define GET_NEXT_LINE_H
 
-#ifndef BUFFER_SIZE
-# define BUFFER_SIZE 1024
-//BUFFER_SIZE (1024 bytes) is used to read data from a file in chunks
-#endif
+# ifndef BUFFER_SIZE
+#  define BUFFER_SIZE 10
 
-#include <fcntl.h>   // for open
-#include <unistd.h>  // for read, close
-#include <stdlib.h>  // for malloc, free
-#include <stdio.h>   // for printf, perror
-#include <string.h>  // for strlen
+# endif
+
+# include <fcntl.h>
 # include <limits.h>
+# include <stdio.h>
+# include <stdlib.h>
+# include <string.h>
+# include <unistd.h>
 
-
-char *get_next_line(int fd);
+char	*get_next_line(int fd);
 char	*ft_strchr(const char *s, int c);
 size_t	ft_strlen(const char *s);
 char	*ft_strjoin(char const *s1, char const *s2);
-char    *ft_strdup(const char *s);
+char	*ft_strdup(const char *s);
 
 #endif
