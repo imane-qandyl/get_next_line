@@ -6,7 +6,7 @@
 /*   By: imqandyl <imqandyl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/22 09:24:35 by imqandyl          #+#    #+#             */
-/*   Updated: 2024/07/22 13:58:16 by imqandyl         ###   ########.fr       */
+/*   Updated: 2024/07/31 16:20:30 by imqandyl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,32 +39,25 @@ char	*strdup_to_newline(char *str)
 	return (n_str);
 }
 
-char	*read_chunks(int fd, char *buf, char *str)
+char	*read_chunks(int fd, char *str)
 {
-	char	*new_str;
+	char	buffer[BUFFER_SIZE + 1];
 	int		byte_read;
 
+	if (fd < 0 || BUFFER_SIZE <= 0)
+		return (NULL);
 	byte_read = 1;
-	while ((!ft_strchr(str, '\n')) && byte_read > 0)
+	while (!ft_strchr(str) && byte_read > 0)
 	{
-		byte_read = read(fd, buf, BUFFER_SIZE);
+		byte_read = read(fd, buffer, BUFFER_SIZE);
 		if (byte_read < 0)
 		{
-			free(buf);
 			free(str);
 			return (NULL);
 		}
-		if (byte_read == 0)
-		{
-			free(buf);
-			return (str);
-		}
-		buf[byte_read] = '\0';
-		new_str = str;
-		str = ft_strjoin(str, buf);
-		free(new_str);
+		buffer[byte_read] = '\0';
+		str = ft_strjoin(str, buffer);
 	}
-	free(buf);
 	return (str);
 }
 
@@ -85,6 +78,7 @@ char	*remove_first_line(char *str)
 	}
 	n_str = ft_strdup(str + i);
 	free(str);
+	str = NULL;
 	if (!n_str)
 		return (NULL);
 	return (n_str);
@@ -92,41 +86,21 @@ char	*remove_first_line(char *str)
 
 char	*get_next_line(int fd)
 {
-	char		*buf;
 	static char	*str;
 	char		*n_str;
 
-	if (fd < 0 || BUFFER_SIZE <= 0 || BUFFER_SIZE >= INT_MAX)
+	if (fd < 0 || BUFFER_SIZE <= 0)
 		return (NULL);
-	buf = (char *)malloc((size_t)BUFFER_SIZE + 1);
-	if (!buf)
-		return (NULL);
-	str = read_chunks(fd, buf, str);
+	str = read_chunks(fd, str);
 	if (!str)
+		return (NULL);
+	n_str = strdup_to_newline(str);
+	if (!n_str)
 	{
+		free(str);
+		str = NULL;
 		return (NULL);
 	}
-	n_str = strdup_to_newline(str);
 	str = remove_first_line(str);
 	return (n_str);
 }
-
-// int	main(void)
-// {
-// 	int		fd;
-// 	char	*line;
-
-// 	fd = open("file.txt", O_RDONLY);
-// 	if (fd == -1)
-// 	{
-// 		perror("Error opening file");
-// 		return (1);
-// 	}
-// 	while ((line = get_next_line(fd)) != NULL)
-// 	{
-// 		printf("%s", line);
-// 		free(line);
-// 	}
-// 	close(fd);
-// 	return (0);
-// }

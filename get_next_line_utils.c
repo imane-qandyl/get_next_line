@@ -6,43 +6,46 @@
 /*   By: imqandyl <imqandyl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/22 11:02:24 by imqandyl          #+#    #+#             */
-/*   Updated: 2024/07/22 13:24:25 by imqandyl         ###   ########.fr       */
+/*   Updated: 2024/07/31 16:34:49 by imqandyl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-size_t	ft_strlen(const char *s)
+size_t	ft_strlen(char *s)
 {
 	size_t	len;
 
 	len = 0;
-	while (s && s[len])
-		len++;
+	if (s)
+	{
+		while (s[len])
+			len++;
+	}
 	return (len);
 }
 
-char	*ft_strchr(const char *s, int c)
+int	ft_strchr(char *s)
 {
 	if (!s)
-		return (NULL);
+		return (0);
 	while (*s)
 	{
-		if (*s == (char)c)
-			return ((char *)s);
+		if (*s == '\n')
+			return (1);
 		s++;
 	}
-	if (*s == (char)c)
-		return ((char *)s);
-	return (NULL);
+	return (0);
 }
 
-char	*ft_strdup(const char *s1)
+char	*ft_strdup(char *s1)
 {
 	char	*dup;
 	size_t	len;
 	size_t	i;
 
+	if (s1 == NULL)
+		return (NULL);
 	len = ft_strlen(s1);
 	dup = malloc(len + 1);
 	if (!dup)
@@ -57,29 +60,30 @@ char	*ft_strdup(const char *s1)
 	return (dup);
 }
 
-char	*ft_strjoin(char const *s1, char const *s2)
+char	*ft_strjoin(char *s1, char *s2)
 {
-	char	*joined;
-	char	*ptr;
-	size_t	len1;
-	size_t	len2;
+	char	*join;
+	int		i;
+	int		j;
 
-	len1 = 0;
-	len2 = 0;
-	if (!s1 && !s2)
+	if (!s1)
+	{
+		s1 = malloc(sizeof(char));
+		if (!s1)
+			return (NULL);
+		s1[0] = '\0';
+	}
+	if (!s2)
 		return (NULL);
-	if (s1)
-		len1 = ft_strlen(s1);
-	if (s2)
-		len2 = ft_strlen(s2);
-	joined = malloc(len1 + len2 + 1);
-	if (!joined)
-		return (NULL);
-	ptr = joined;
-	while (s1 && *s1)
-		*ptr++ = *s1++;
-	while (s2 && *s2)
-		*ptr++ = *s2++;
-	*ptr = '\0';
-	return (joined);
+	join = malloc(ft_strlen(s1) + ft_strlen(s2) + 1);
+	if (!join)
+		return (free(s1), s1 = NULL, NULL);
+	i = -1;
+	while (s1[++i])
+		join[i] = s1[i];
+	j = 0;
+	while (s2[j])
+		join[i++] = s2[j++];
+	join[i] = '\0';
+	return (free(s1), s1 = NULL, join);
 }

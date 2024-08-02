@@ -5,12 +5,12 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: imqandyl <imqandyl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/07/19 10:06:03 by imqandyl          #+#    #+#             */
-/*   Updated: 2024/07/22 13:48:59 by imqandyl         ###   ########.fr       */
+/*   Created: 2024/07/22 09:24:35 by imqandyl          #+#    #+#             */
+/*   Updated: 2024/07/31 16:59:20 by imqandyl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "get_next_line_bonus.h"
+#include "get_next_line.h"
 
 char	*strdup_to_newline(char *str)
 {
@@ -24,7 +24,7 @@ char	*strdup_to_newline(char *str)
 		i++;
 	if (str[i] == '\n')
 		i++;
-	n_str = malloc(i + 1);
+	n_str = (char *)malloc(i + 1);
 	if (!n_str)
 		return (NULL);
 	n_str[i] = '\0';
@@ -39,36 +39,29 @@ char	*strdup_to_newline(char *str)
 	return (n_str);
 }
 
-char	*read_chunks(int fd, char *buf, char *str)
+char	*read_chunks(int fd, char *str)
 {
-	char	*new_str;
+	char	buffer[BUFFER_SIZE + 1];
 	int		byte_read;
 
+	if (fd < 0 || BUFFER_SIZE <= 0)
+		return (NULL);
 	byte_read = 1;
-	while ((!ft_strchr(str, '\n')) && byte_read > 0)
+	while (!ft_strchr(str) && byte_read > 0)
 	{
-		byte_read = read(fd, buf, BUFFER_SIZE);
+		byte_read = read(fd, buffer, BUFFER_SIZE);
 		if (byte_read < 0)
 		{
-			free(buf);
 			free(str);
 			return (NULL);
 		}
-		if (byte_read == 0)
-		{
-			free(buf);
-			return (str);
-		}
-		buf[byte_read] = '\0';
-		new_str = str;
-		str = ft_strjoin(str, buf);
-		free(new_str);
+		buffer[byte_read] = '\0';
+		str = ft_strjoin(str, buffer);
 	}
-	free(buf);
 	return (str);
 }
 
-void	remove_first_line(char *str[], int fd)
+char	*remove_first_line(char *str[], int fd)
 {
 	size_t	i;
 	char	*n_str;
@@ -81,31 +74,33 @@ void	remove_first_line(char *str[], int fd)
 	if (!str[fd][i])
 	{
 		free(str[fd]);
-		str[fd] = NULL;
-		return ;
+		return (NULL);
 	}
 	n_str = ft_strdup(str[fd] + i);
 	free(str[fd]);
+	str[fd] = NULL;
 	if (!n_str)
-		return ;
-	str[fd] = n_str;
+		return (NULL);
+	return (n_str);
 }
 
 char	*get_next_line(int fd)
 {
-	char		*buf;
 	static char	*str[1024];
 	char		*n_str;
 
-	if (fd < 0 || BUFFER_SIZE <= 0 || BUFFER_SIZE >= INT_MAX)
+	if (fd < 0 || BUFFER_SIZE <= 0)
 		return (NULL);
-	buf = malloc((size_t)BUFFER_SIZE + 1);
-	if (!buf)
-		return (NULL);
-	str[fd] = read_chunks(fd, buf, str[fd]);
+	str[fd] = read_chunks(fd, str[fd]);
 	if (!str[fd])
 		return (NULL);
 	n_str = strdup_to_newline(str[fd]);
-	remove_first_line(str, fd);
+	if (!n_str)
+	{
+		free(str[fd]);
+		str[fd] = NULL;
+		return (NULL);
+	}
+	str[fd] = remove_first_line(str, fd);
 	return (n_str);
 }
